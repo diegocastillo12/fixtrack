@@ -1,0 +1,14 @@
+Criterio,Peso,Flutter,React Native,Kotlin Multiplatform,Nativo,Evidencia de la calificación
+Competencia actual del equipo,25%,5,3,2,2,El equipo cuenta con mayor experiencia previa en Flutter y Dart respecto de las demás alternativas
+Soporte de las capacidades requeridas,20%,5,4,4,5,Flutter dispone de paquetes maduros para cámara mapas almacenamiento local consumo de APIs y otras capacidades móviles requeridas por FixTrack
+Madurez del ecosistema para el dominio,15%,5,4,4,5,Flutter cuenta con documentación oficial amplia comunidad activa y un ecosistema consolidado de paquetes para aplicaciones móviles
+Rendimiento requerido,10%,4,4,5,5,El rendimiento de Flutter y React Native es suficiente para las funcionalidades previstas en FixTrack mientras que Kotlin Multiplatform y Nativo ofrecen mayor cercanía a las APIs de plataforma
+Viabilidad sin macOS,10%,5,5,5,3,Flutter React Native y Kotlin Multiplatform permiten desarrollar y probar Android desde Windows mientras que el desarrollo completo para iOS requiere macOS
+Curva de aprendizaje,10%,5,3,2,2,El equipo tendría menor tiempo de adaptación con Flutter debido a la experiencia previa mientras que las otras alternativas requieren mayor aprendizaje
+Mantenibilidad post-curso,10%,5,3,3,3,Flutter resulta más fácil de mantener para el equipo porque utiliza una sola base de código y tecnologías ya conocidas
+RESULTADO FINAL,,,,,
+Flutter,4.90/5,,,,
+React Native,3.45/5,,,,
+Kotlin Multiplatform,3.15/5,,,,
+Nativo,3.25/5,,,,
+Finalistas,Flutter y React Native,,,,

@@ -1,0 +1,200 @@
+openapi: 3.0.3
+
+info:
+  title: FixTrack API
+  description: API para la gestión de incidencias de laboratorios de la Universidad Privada de Tacna.
+  version: 1.0.0
+
+servers:
+  - url: https://api.fixtrack.example.com
+    description: Servidor de referencia
+
+tags:
+  - name: Incidencias
+    description: Operaciones para registrar y consultar incidencias
+
+paths:
+  /incidencias:
+    post:
+      tags:
+        - Incidencias
+      summary: Registrar una nueva incidencia
+      description: >
+        Registra una incidencia reportada desde la aplicación móvil.
+        La misma Idempotency-Key debe reutilizarse en los reintentos
+        para evitar la creación duplicada de una incidencia.
+      operationId: crearIncidencia
+
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: >
+            Identificador único generado por la aplicación antes del
+            primer intento y reutilizado en todos los reintentos.
+          schema:
+            type: string
+            format: uuid
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearIncidenciaRequest'
+
+      responses:
+        '201':
+          description: Incidencia creada correctamente
+          headers:
+            Location:
+              description: URI de la incidencia creada
+              schema:
+                type: string
+                example: /incidencias/INC-001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incidencia'
+
+        '401':
+          description: Usuario no autorizado
+
+        '422':
+          description: Los datos proporcionados no permiten registrar la incidencia
+
+        '503':
+          description: Servicio temporalmente no disponible
+
+    get:
+      tags:
+        - Incidencias
+      summary: Consultar incidencias
+      operationId: listarIncidencias
+
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          description: Cursor utilizado para obtener el siguiente conjunto de resultados
+          schema:
+            type: string
+
+        - name: limit
+          in: query
+          required: false
+          description: Cantidad máxima de incidencias devueltas
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+
+      responses:
+        '200':
+          description: Lista de incidencias obtenida correctamente
+          headers:
+            Cache-Control:
+              description: Política de caché para la respuesta
+              schema:
+                type: string
+                example: private, max-age=60
+
+            ETag:
+              description: Identificador de la versión de la respuesta
+              schema:
+                type: string
+                example: '"incidencias-v1"'
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidenciasPaginadas'
+
+        '401':
+          description: Usuario no autorizado
+
+        '503':
+          description: Servicio temporalmente no disponible
+
+components:
+  schemas:
+
+    CrearIncidenciaRequest:
+      type: object
+      required:
+        - titulo
+        - descripcion
+        - laboratorio
+      properties:
+        titulo:
+          type: string
+          example: Mouse no funciona
+        descripcion:
+          type: string
+          example: El mouse del equipo no responde
+        laboratorio:
+          type: string
+          example: Laboratorio 03
+        equipoId:
+          type: string
+          example: PC-LAB03-12
+        fotoUrl:
+          type: string
+          format: uri
+          example: https://example.com/evidencias/incidencia-001.jpg
+
+    Incidencia:
+      type: object
+      required:
+        - id
+        - titulo
+        - descripcion
+        - laboratorio
+        - estado
+        - fechaCreacion
+      properties:
+        id:
+          type: string
+          example: INC-001
+        titulo:
+          type: string
+          example: Mouse no funciona
+        descripcion:
+          type: string
+          example: El mouse del equipo no responde
+        laboratorio:
+          type: string
+          example: Laboratorio 03
+        equipoId:
+          type: string
+          example: PC-LAB03-12
+        fotoUrl:
+          type: string
+          format: uri
+        estado:
+          type: string
+          enum:
+            - pendiente
+            - en_proceso
+            - resuelto
+          example: pendiente
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: '2026-09-10T20:30:00-05:00'
+
+    IncidenciasPaginadas:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Incidencia'
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor para solicitar el siguiente conjunto de resultados
+          example: INC-020

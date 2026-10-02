@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  calidad:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Detectar secretos
+        run: |
+          docker run --rm \
+            -v "$PWD":/src \
+            aquasec/trivy fs \
+            --scanners secret \
+            --exit-code 1 \
+            /src
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Obtener dependencias
+        working-directory: app
+        run: flutter pub get
+
+      - name: Analizar proyecto
+        working-directory: app
+        run: flutter analyze
+
+      - name: Ejecutar pruebas
+        working-directory: app
+        run: flutter test --coverage
+
+      - name: Verificar cobertura del dominio
+        working-directory: app
+        run: |
+          RESULTADO=$(awk '
+            /^SF:/ {
+              archivo = $0
+              objetivo = (archivo ~ /lib\/features\/incidencias\/domain\/incidencia_validator\.dart$/)
+            }
+
+            objetivo && /^LF:/ {
+              split($0, a, ":")
+              total += a[2]
+            }
+
+            objetivo && /^LH:/ {
+              split($0, a, ":")
+              cubiertas += a[2]
+            }
+
+            END {
+              if (total == 0) {
+                print "SIN_DATOS"
+              } else {
+                printf "%.2f", (cubiertas / total) * 100
+              }
+            }
+          ' coverage/lcov.info)
+
+          echo "Cobertura del dominio: $RESULTADO%"
+
+          if [ "$RESULTADO" = "SIN_DATOS" ]; then
+            echo "ERROR: No se encontraron datos de cobertura del dominio"
+            exit 1
+          fi
+
+          awk -v cobertura="$RESULTADO" 'BEGIN {
+            if (cobertura < 70) {
+              print "ERROR: La cobertura del dominio es menor al 70%"
+              exit 1
+            } else {
+              print "Cobertura del dominio correcta: " cobertura "%"
+            }
+          }'
+
+      - name: Compilar aplicacion
+        working-directory: app
+        run: flutter build apk --debug
